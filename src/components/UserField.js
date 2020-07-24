@@ -8,7 +8,8 @@ class UserField extends React.Component {
   render() {
     return (
       <div className="seabattle">
-      <h2>Ваше поле</h2>
+      {this.props.playerType === 'player' ? <h2>Ваше поле</h2> : <h2>Поле противника</h2>}
+      
         <div className="game" >
           <ul className="game__column-name">
             {

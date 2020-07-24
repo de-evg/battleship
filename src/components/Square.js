@@ -3,7 +3,7 @@ import React from 'react';
 class Square extends React.Component {
   render () {
     const fieldClasses = ["square battlefield__square "];
-    const shipClass = this.props.fieldData.isShip && (this.props.playerType === 'player1' || this.props.gameMode.isOver) ? "ship " : "";
+    const shipClass = this.props.fieldData.isShip && (this.props.playerType === 'player' || this.props.gameMode.isOver) ? "ship " : "";
     const hitClass = this.props.fieldData.isHit ? "hit " : "";
     const destroyedClass = this.props.fieldData.isDestroyed ? "destroyed " : "";
     const missClass = !this.props.fieldData.isShip && this.props.fieldData.isMiss ? "miss " : "";    
