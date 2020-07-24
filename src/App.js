@@ -3,6 +3,7 @@ import './App.css';
 import Game from './components/Game.js';
 import Client from './components/Client.js';
 import io from 'socket.io-client';
+import URL from './data/url.js';
 
 function App() {
     class MainMenu extends React.Component {
@@ -77,7 +78,7 @@ function App() {
         };
 
         componentDidMount() {
-            this.socket = io('http://176.176.111.16:3001/');
+            this.socket = io(URL.SOCKET, {transports: ['websocket', 'flashsocket', 'xhr-polling']});
         };
 
         componentDidUpdate() {
