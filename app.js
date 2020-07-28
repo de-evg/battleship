@@ -9,12 +9,34 @@ const bodyParser = require('body-parser');
 const port = 3001;
 
 let Game = {};
+const Users = {};
 class newGame {
   constructor() {
     this.isSecondPlayerConnected = false;
     this.isServerTurn = Math.random() >= 0.5;
     this.isServerPlayerMove = Math.random() >= 0.5;
   }
+};
+
+class User {
+  constructor(id) {
+    this.id = id;
+    this.nickname = '';
+    this.shipsData = {};
+    this.currentGameFieldsData = {};
+  }
+
+  setNickname(nickname) {
+    this.nickname = nickname;
+  };
+
+  setShipsData(shipsData) {
+    this.shipsData = shipsData;
+  };
+
+  setCurrentGameFieldsData(fieldsData) {
+    this.currentGameFieldsData = fieldsData;
+  };
 };
 
 app.use(bodyParser.json({ type: 'application/json' }));
@@ -27,9 +49,9 @@ app.use(bodyParser.urlencoded({
 // });
 
 io.on('connection', (socket) => {
-  console.log('Присоединился');
+  console.log('Присоединился'); 
   socket.on('disconnect', () => {
-    console.log('Отключился');
+    console.log('Отключился ', socket.id);
   })
 
   socket.on('sendGameName', (gameName) => {
@@ -60,11 +82,17 @@ io.on('connection', (socket) => {
     console.log('5 setStartStateOnCloud - На сервак отправляются стартовые параметры поля и кораблей');
     console.log('nickname ', socket.nickname);
     Game[gameName][socket.nickname] = state;
+    Game[gameName][socket.nickname].shots = [];
   });
 
   socket.on('playerReady', (state) => {
     console.log('6 playerReady - Игрок разместил корабли, отправил данные на серв и готов к игре');
-    Game[state.gameName][state.nickname] = state;
+    const {nickname, gameName, isPlayerReady, isPlayerMove, currentGameFieldsData, shipsData} = state;    
+    Game[state.gameName][nickname].gameName = gameName;
+    Game[state.gameName][nickname].isPlayerReady = isPlayerReady;
+    Game[state.gameName][nickname].isPlayerMove = isPlayerMove;
+    Game[state.gameName][nickname].currentGameFieldsData = currentGameFieldsData;
+    Game[state.gameName][nickname].shipsData = shipsData;
   });
 
   socket.on('getGame', (gameName) => {
@@ -73,54 +101,45 @@ io.on('connection', (socket) => {
       console.log(Game[gameName][socket.nickname]);
     }
     if (Game[gameName]['serverPlayer'] && Game[gameName]['clientPlayer']) {
-      console.log('все есть');
       socket.emit('sendGame', Game[gameName]);
-    } else {
-      console.log('пропали ');
+    }
+  });
+
+  socket.on('sendLastShot', (state) => {
+    console.log(`8 sendLastData --- Отправка на серв данных после хода ${socket.nickname} --> изменение хода и отправка игроку новых данных`);
+    const {nickname, squireID, isPlayerMove, gameName} = state;
+    if (nickname !== 'serverPlayer') {
+      Game[gameName]['serverPlayer'].shots.push(squireID);
+      Game[gameName]['serverPlayer'].isDataUpdated = true;
+      if (!isPlayerMove) {
+        Game[gameName]['serverPlayer'].isPlayerMove = !isPlayerMove;      
+      }
+      console.log(Game[gameName]['serverPlayer'].shots);
+    }
+    if (nickname !== 'clientPlayer') {
+      Game[gameName]['clientPlayer'].shots.push(squireID);
+      Game[gameName]['clientPlayer'].isDataUpdated = true;
+      if (!isPlayerMove) {
+        Game[gameName]['clientPlayer'].isPlayerMove = !isPlayerMove;
+      } 
+      console.log(Game[gameName]['clientPlayer'].shots);     
     }
   });
 
   socket.on('getShotData' , (gameName) => {
     console.log(`10 getShotData --- Запрос параметра выстрела ${socket.nickname}`);
-    socket.emit('sendShot', Game[gameName]);       
+    console.log(Game[gameName][socket.nickname].shots);
+    setInterval(() => {
+      if (Game[gameName][socket.nickname].isDataUpdated && Game[gameName][socket.nickname].shots.length) {      
+        const shotID = Game[gameName][socket.nickname].shots.splice(0, 1);
+        console.log('условие отправки выполено ', shotID)
+        socket.emit('sendShot', shotID);    
+      }
+    }, 1000);        
   });
 
-  socket.on('sendLastShot', (state) => {
-    console.log(`8 sendLastData --- Отправка на серв данных после хода ${socket.nickname} --> изменение хода и отправка игроку новых данных`);
-    if (!Game[state.gameName][socket.nickname]) {
-      console.log(Game[state.gameName][socket.nickname]);
-    }
-    
-    if (state.nickname && state.nickname !== 'serverPlayer' && !state.isPlayerMove) {
-      Game[state.gameName]['serverPlayer'] = state;
-      Game[state.gameName]['serverPlayer'].isPlayerMove = !state.isPlayerMove;
-      
-    }
-    if (state.nickname && state.nickname !== 'clientPlayer' && !state.isPlayerMove) {
-      Game[state.gameName]['clientPlayer'] = state;
-      Game[state.gameName]['clientPlayer'].isPlayerMove = !state.isPlayerMove
-    }       
-  });
-
-  socket.on('sendClearSquireID', (gameName) => {
-    Game[gameName][socket.nickname].squireID = null;
-  });
-
-  socket.on('sendNewState', (state) => {
-    console.log('9 sendNewState');
-    if (!Game[state.gameName][socket.nickname]) {
-      console.log(Game[state.gameName][socket.nickname]);
-    }  
-    
-    if (state.nickname && state.nickname !== 'serverPlayer' && !state.isPlayerMove) {
-      Game[state.gameName]['serverPlayer'] = state;
-      Game[state.gameName]['serverPlayer'].isPlayerMove = !state.isPlayerMove;
-      
-    }
-    if (state.nickname && state.nickname !== 'clientPlayer' && !state.isPlayerMove) {
-      Game[state.gameName]['clientPlayer'] = state;
-      Game[state.gameName]['clientPlayer'].isPlayerMove = !state.isPlayerMove
-    }
+  socket.on('sendClearSquireIDs', (gameName) => {    
+    Game[gameName][socket.nickname].isDataUpdated = false;
   });
 });
 

@@ -36,23 +36,12 @@ function App() {
         };
 
         handelClientGameMode = () => {
-            const getGames = {};
-            this.q = setInterval(() => {
-                this.socket.emit('getGames');
-                this.socket.on('newGames', (getGames) => {
-                    console.log(getGames);
-                    if (Object.keys(getGames) !== 0) {
-                        clearInterval(this.q);
-                    }
-                    this.setState({
-                        isClient: true,
-                        games: getGames
-                    });
+            this.socket.emit('getGames');
+            this.socket.on('newGames', (games) => {
+                this.setState({
+                    isClient: true,
+                    games: games
                 });
-            }, 2000);
-            this.setState({
-                isClient: true,
-                games: getGames
             });
         };
 
@@ -78,7 +67,7 @@ function App() {
         };
 
         componentDidMount() {
-            this.socket = io(URL.SOCKET, {transports: ['websocket', 'flashsocket', 'xhr-polling']});
+            this.socket = io(URL.SOCKET, { transports: ['websocket'] });
         };
 
         componentDidUpdate() {
