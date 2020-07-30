@@ -323,8 +323,7 @@ class Game extends React.Component {
         const playerData = this.state.playerData;
         playerData.isPlayerReady = true;
         const gameMode = this.state.gameMode;
-
-
+        const newcomputerData = this.state.computerData;
         if (this.props.isMultiplayer && this.state.playerData.isPlayerReady && this.state.gameMode.isArrangement) {
             const state = {};
             state.nickname = this.props.isServer ? 'serverPlayer' : 'clientPlayer';
@@ -335,17 +334,32 @@ class Game extends React.Component {
             state.shipsData = playerData.shipsData;
             this.props.socket.emit('playerReady', state);
         }
-        this.setState({
+        if (!this.props.isMultiplayer) {
+            const placeComputerShips = (fieldData, shipsData) => {
+                Object.keys(shipsData).forEach((shipType) => shipsData[shipType].forEach((ship) => {
+                    ship.coords.map((coord) => {
+                        fieldData["column" + coord.slice(0, 1)][coord.slice(1)].isShip = true;
+                        fieldData["column" + coord.slice(0, 1)][coord.slice(1)].isBlocked = true;
+                        fieldData["column" + coord.slice(0, 1)][coord.slice(1)].shipID = ship.id;
+                        return coord;
+                    });
+                }))
+                return fieldData;
+            }
+            const placedComputerShipsOnField = placeComputerShips(this.state.computerData.currentGameFieldsData, this.state.computerData.shipsData);
+            const newcomputerData = this.state.computerData;
+            newcomputerData.currentGameFieldsData = placedComputerShipsOnField;
+            gameMode.isArrangement = false;
+            gameMode.isGame = true;
+        }
+        this.setState({            
             playerData: playerData,
+            computerData: newcomputerData,
             gameMode: gameMode
         });
     };
 
-    handleRefresh = () => {
-
-    }
-
-    isVictoryCheck(shipsData) {
+    checkOnDestroyedShips(shipsData) {
         const shipsTypes = Object.keys(shipsData);
         let survivingShips = [];
         shipsTypes.forEach((type) => {
@@ -356,16 +370,16 @@ class Game extends React.Component {
     };
 
     gameOver(firstPlayerShips, secondPlayerShips) {
-        const gameStatus = this.state.gameMode;
+        const gameMode = this.state.gameMode;
         const game = this.state.game;
-        const isFirstPlayerWin = this.isVictoryCheck(firstPlayerShips);
-        const isSecondPlayerWin = this.isVictoryCheck(secondPlayerShips);
-        gameStatus.isOver = isFirstPlayerWin || isSecondPlayerWin ? true : false;
-        if (gameStatus.isOver) {
-            gameStatus.isGame = false;
-            game.isPlayerWin = isFirstPlayerWin ? true : false;
+        const isFirstPlayerAllShipsDestroyed = this.checkOnDestroyedShips(firstPlayerShips);
+        const isSecondPlayerAllShipsDestroyed = this.checkOnDestroyedShips(secondPlayerShips);
+        gameMode.isOver = isFirstPlayerAllShipsDestroyed || isSecondPlayerAllShipsDestroyed ? true : false;
+        if (gameMode.isOver) {
+            gameMode.isGame = false;
+            game.isPlayerWin = isSecondPlayerAllShipsDestroyed ? true : false;
             this.setState({
-                gameMode: gameStatus,
+                gameMode: gameMode,
                 game: game
             });
         }
@@ -397,6 +411,7 @@ class Game extends React.Component {
 
             const shot = (aimIndex) => {
                 if (this.state.gameMode.isGame) {
+                    console.log(this.state.computerData.shipsData);
                     const aimList = this.state.playerData.aimList;
                     const gameStatus = this.state.game;
                     const playerData = this.state.playerData;
@@ -1140,47 +1155,37 @@ class Game extends React.Component {
                 newOpponentData.isReplayMove = newData.isReplayMove;
                 gameStatus.isPlayerMove = newData.isPlayerMove;
 
-                const gameMode = this.state.gameMode;
-                if (this.isVictoryCheck(this.state.computerData.shipsData)) {
-                    gameMode.isOver = true;
-                    gameMode.isGame = false;
-                    gameStatus.isPlayerWin = true;
-                }
-
-                const postLastData = (opponentData) => {
-                    if (this.props.isMultiplayer) {
-                        const state = {
-                        };
-                        state.gameName = this.props.gameName;
-                        if (this.props.isServer) {
-                            state.nickname = 'serverPlayer';
-                            state.squireID = target.id;
-                        }
-                        if (this.props.isClient) {
-                            state.nickname = 'clientPlayer';
-                            state.squireID = target.id;
-                        }
-
-                        state.isPlayerMove = gameStatus.isPlayerMove;
-
-                        this.props.socket.emit('sendLastShot', state);
-
-                    }
-                };
-                postLastData(newOpponentData);
-                this.props.socket.on('succes', state => console.log(state));
-
+                this.gameOver(this.state.playerData.shipsData, newOpponentData.shipsData);
                 if (this.props.isMultiplayer) {
+                    const postLastData = (opponentData) => {
+                        if (this.props.isMultiplayer) {
+                            const state = {
+                            };
+                            state.gameName = this.props.gameName;
+                            if (this.props.isServer) {
+                                state.nickname = 'serverPlayer';
+                                state.squireID = target.id;
+                            }
+                            if (this.props.isClient) {
+                                state.nickname = 'clientPlayer';
+                                state.squireID = target.id;
+                            }
+
+                            state.isPlayerMove = gameStatus.isPlayerMove;
+
+                            this.props.socket.emit('sendLastShot', state);
+                        }
+                    };
+                    postLastData(newOpponentData);
+
                     this.setState({
                         opponentData: newOpponentData,
-                        game: gameStatus,
-                        gameMode: gameMode,
+                        game: gameStatus
                     });
                 } else {
                     this.setState({
                         computerData: newOpponentData,
-                        game: gameStatus,
-                        gameMode: gameMode,
+                        game: gameStatus
                     });
                 }
             }
@@ -1203,14 +1208,7 @@ class Game extends React.Component {
             const onHit = () => {
                 const shipType = battlefield["column" + column][row].shipID.slice(0, 1);
                 const shipNumber = battlefield["column" + column][row].shipID.slice(-1);
-                const shipOnFire = playerData.shipsData["deck" + shipType][shipNumber];
-
-                if (shipOnFire) {
-                    const x = shipOnFire.coords.find((coord) => {
-                        return squireID === coord;
-                    });
-                    console.log('x =', x);
-                }
+                const shipOnFire = playerData.shipsData["deck" + shipType][shipNumber];                
 
                 const updateShipsData = () => {
                     if (shipOnFire.hits.length) {
@@ -1273,12 +1271,12 @@ class Game extends React.Component {
                 };
                 updateShipsData();
                 updateFieldsData();
-                gameStatus.isPlayerMove = false;
+                this.gameOver(playerData.shipsData, this.state.opponentData.shipsData);
             };
 
             const onMiss = () => {
                 battlefield["column" + column][row].isMiss = true;
-                gameStatus.isPlayerMove = true;
+                gameStatus.isPlayerMove = false;
             };
 
             battlefield["column" + column][row].isShip ? onHit() : onMiss();
@@ -1289,7 +1287,6 @@ class Game extends React.Component {
                 game: gameStatus
             });
         }
-
     };
 
     componentWillUpdate() {
@@ -1352,17 +1349,6 @@ class Game extends React.Component {
                 this.shotOpponent(shots);
             }
         }
-
-        // if (this.props.isMultiplayer && this.state.gameMode.isGame) {
-        //     const checkDataOnUpdate = () => {
-        //         this.props.socket.emit('getShotData', this.props.gameName);
-        //         this.props.socket.on('sendShot', (gameShotData) => {
-        //             clearInterval(this.makeGetRequest);
-        //             this.setState({ shotsData: gameShotData });
-        //         });
-        //     };
-        //     this.makeGetRequest = setInterval(checkDataOnUpdate, 5000);
-        // }
         if (this.props.isMultiplayer && this.state.gameMode.isGame && this.state.game.isPlayerMove) {
             debugger;
             this.gameOver(this.state.playerData.shipsData, this.state.opponentData.shipsData);
@@ -1399,13 +1385,18 @@ class Game extends React.Component {
                 this.props.socket.emit('setStartStateOnCloud', this.props.gameName, state);
             }
             sendStartStateOnServer();
+            this.props.socket.emit('getShotData', this.props.gameName);
             const playerName = this.props.isServer ? 'serverPlayer' : 'clientPlayer';
-            this.setState({ playerName: playerName });
+            let shotsData;
+            this.props.socket.on('sendShot', (gameShotData) => {
+                shotsData = gameShotData;
+                this.setState({
+                    playerName: playerName,
+                    shotsData: shotsData
+                });
+            });
         }
-        this.props.socket.emit('getShotData', this.props.gameName);
-        this.props.socket.on('sendShot', (gameShotData) => {            
-            this.setState({ shotsData: gameShotData });
-        });
+
     };
 
     render() {
@@ -1429,6 +1420,7 @@ class Game extends React.Component {
                                 playerData={this.state.playerData}
                                 gameMode={this.state.gameMode}
                                 arrangementModeSettings={this.state.arrangementModeSettings}
+                                lastShot={this.state.opponentData.lastShot}
 
                                 handleMouseOver={this.handleMouseOver}
                                 handleMouseOut={this.handleMouseOut}
@@ -1495,7 +1487,6 @@ class Game extends React.Component {
                 {
                     this.state.gameMode.isOver
                         ? <WinnerMessage
-                            gameMode={this.state.gameMode}
                             isPlayerWin={this.state.game.isPlayerWin}
                         /> :
                         null
