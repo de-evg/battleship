@@ -23,7 +23,7 @@ class Battlefield extends React.Component {
   }
   </div>
     if (this.props.gameMode.isArrangement) {
-      battlefieldElement = this.props.playerType === 'player1' 
+      battlefieldElement = this.props.playerType === 'player' 
         ? <div className="game__battlefield battlefield"
             onWheel={this.props.handleWheelRotate}         
             onMouseOut={this.props.handleMouseOut}
@@ -49,7 +49,7 @@ class Battlefield extends React.Component {
           </div>
     }
     if (this.props.gameMode.isGame) {
-      battlefieldElement = this.props.playerType === 'player1' 
+      battlefieldElement = this.props.playerType === 'player' 
         ? <div className="game__battlefield battlefield" >
           {
             Object.keys(this.props.fieldsData).map((columnName, i) => <BattlefieldRow 
@@ -71,7 +71,7 @@ class Battlefield extends React.Component {
           }
           </div>
     }
-    if (this.props.gameMode.isOver && this.props.playerType !== 'player1') {
+    if (this.props.gameMode.isOver && this.props.playerType !== 'player') {
       battlefieldElement = <div className="game__battlefield battlefield" >
       {
         Object.keys(this.props.fieldsData).map((columnName, i) => <BattlefieldRow 
