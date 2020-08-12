@@ -359,6 +359,15 @@ class Game extends React.Component {
         });
     };
 
+    handleBattlefieldToggle(evt) {
+        evt.preventDefault();
+        const currentGameBoardElement = document.querySelector(".game-board.current-board");
+        const hiddenGameBoardElement = document.querySelector(".game-board");
+        currentGameBoardElement.classList.toggle("current-board");
+        hiddenGameBoardElement.classList.toggle("current-board");
+    }
+    //написать условия для корректной смены класса
+
     checkOnDestroyedShips(shipsData) {
         const shipsTypes = Object.keys(shipsData);
         let survivingShips = [];
@@ -1276,7 +1285,7 @@ class Game extends React.Component {
 
             const onMiss = () => {
                 battlefield["column" + column][row].isMiss = true;
-                gameStatus.isPlayerMove = false;
+                gameStatus.isPlayerMove = true;
             };
 
             battlefield["column" + column][row].isShip ? onHit() : onMiss();
@@ -1401,17 +1410,23 @@ class Game extends React.Component {
 
     render() {
         const messageMoveElement = this.state.game.isPlayerMove ? <p>Ваш ход</p> : <p>Ход противника</p>
-        const playBtnElement = <button className="seabattle__place-ship-btn" onClick={this.handleBtnPlayClick}>
+        const playBtnElement = <button className="btn seabattle__place-ship-btn" onClick={this.handleBtnPlayClick}>
             {!this.state.playerData.isPlayerReady ? 'Играть' : 'Ждем противника'}</button>
         const messageArrangementElement = [];
         messageArrangementElement.push(
             <p key="setPlace" className="seabattle__place-ship-text" >Укажите куда установить корабль</p>,
             <button key="rotateShip" className="seabattle__rotate-ship-btn btn" onClick={this.handleRotate}>Повернуть корабль</button>
         );
-        const arrangementBtnElement = <button className="seabattle__place-ship-btn btn" onClick={this.handleBtnClick}>Разместить корабли</button>
+        const arrangementBtnElement = <button className="btn" onClick={this.handleBtnClick}>Разместить корабли</button>
         return (
             <div className="container">
-                <h1>Морской бой</h1>
+                <h1 className={this.state.gameMode.isGame || this.state.gameMode.isArrangement ? "visually--hidden" : ""}>Морской бой</h1>
+                {
+                    this.state.gameMode.isGame ? messageMoveElement : ""
+                }
+                {
+                    this.state.gameMode.isArrangement ? "Разместите корабли" : ""
+                }
                 {
                     this.props.isMultiplayer
                         ? <div className={'main'}>
@@ -1427,6 +1442,7 @@ class Game extends React.Component {
                                 handleRotate={this.handleRotate}
                                 handleBtnPress={this.handleBtnPress}
                                 handleBattlefieldClick={this.handleBattlefieldClick}
+                                handleBattlefieldToggle={this.handleBattlefieldToggle}
                             />
 
                             {this.state.opponentData
@@ -1437,6 +1453,7 @@ class Game extends React.Component {
                                     arrangementModeSettings={this.state.arrangementModeSettings}
                                     isPlayerMove={this.state.game.isPlayerMove}
                                     handlePlayerMove={this.handlePlayerMove}
+                                    handleBattlefieldToggle={this.handleBattlefieldToggle}
                                 />
                                 : null
                             }
@@ -1451,12 +1468,14 @@ class Game extends React.Component {
                                     gameMode={this.state.gameMode}
                                     arrangementModeSettings={this.state.arrangementModeSettings}
                                     lastShot={this.state.computerData.lastShot}
+                                    whosMove={messageMoveElement}
 
                                     handleMouseOver={this.handleMouseOver}
                                     handleMouseOut={this.handleMouseOut}
                                     handleRotate={this.handleRotate}
                                     handleBtnPress={this.handleBtnPress}
                                     handleBattlefieldClick={this.handleBattlefieldClick}
+                                    handleBattlefieldToggle={this.handleBattlefieldToggle}
                                 />
 
                                 <CompField
@@ -1466,12 +1485,9 @@ class Game extends React.Component {
                                     arrangementModeSettings={this.state.arrangementModeSettings}
                                     isPlayerMove={this.state.game.isPlayerMove}
                                     handlePlayerMove={this.handlePlayerMove}
+                                    handleBattlefieldToggle={this.handleBattlefieldToggle}
                                 />
                             </div>
-                }
-
-                {
-                    this.state.gameMode.isGame ? messageMoveElement : ""
                 }
                 {
                     this.state.arrangementModeSettings.isAllShipPlaced && this.state.gameMode.isArrangement ? playBtnElement : null

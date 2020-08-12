@@ -6,10 +6,14 @@ const ROW_NUMBERS = Array(10).fill(null);
 
 class UserField extends React.Component {
   render() {
+    const shipsTypes = Object.keys(this.props.playerData.shipsData);
+    const ships = [];
+    shipsTypes.forEach((type) => {
+      ships.push(this.props.playerData.shipsData[type].filter((ship) => !ship.isDestroyed));
+    });
+    const titleElement = this.props.playerType === "player" ? <h2>Ваше поле</h2> : <h2>Поле противника</h2>;
     return (
-      <div className="seabattle">
-      {this.props.playerType === 'player' ? <h2>Ваше поле</h2> : <h2>Поле противника</h2>}
-      
+      <div className="game-board current-board">
         <div className="game" >
           <ul className="game__column-name">
             {
@@ -35,6 +39,20 @@ class UserField extends React.Component {
             handleWheelRotate={this.props.handleRotate}
             handleBattlefieldClick={this.props.handleBattlefieldClick}
           />
+          </div>
+          <div className={"game-info"}>
+            {
+              titleElement
+            }            
+            {
+              !this.props.gameMode.isGame
+                ? null
+                : <ul className="ships-list">
+                  {ships.reverse().map((typeShips, i) => {
+                    return <li key={i}>{i + 1} палубных - <span>x{typeShips.length}</span></li>
+                  })}
+                </ul>
+            }                   
         </div>
       </div>
     );

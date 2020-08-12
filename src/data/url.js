@@ -1,5 +1,5 @@
 const URL = {
-    SOCKET: 'http://192.168.1.64:3001/',
+    SOCKET: 'http://176.176.111.16:3001/',
 }
 
 export default URL;

@@ -37,10 +37,17 @@ function App() {
 
         handelClientGameMode = () => {
             this.socket.emit('getGames');
-            this.socket.on('newGames', (games) => {
+            this.socket.on('newGames', (Games) => {
+                const games = Object.keys(Games);
+                const gamesWithoutSecondPlayer = {};
+                games.forEach(gameName => {
+                   if (!Games[gameName].isSecondPlayerConnected) {
+                    gamesWithoutSecondPlayer[gameName] = Games[gameName];
+                   }
+                });                
                 this.setState({
                     isClient: true,
-                    games: games
+                    games: gamesWithoutSecondPlayer
                 });
             });
         };
@@ -63,6 +70,23 @@ function App() {
             this.setState({
                 isStartGame: true,
                 gameName: gameName
+            });
+        };
+
+        refreshGames = (evt) => {
+            evt.preventDefault();
+            this.socket.emit('getGames');
+            this.socket.on('newGames', (Games) => {
+                const games = Object.keys(Games);
+                const gamesWithoutSecondPlayer = {};
+                games.forEach(gameName => {
+                   if (!Games[gameName].isSecondPlayerConnected) {
+                    gamesWithoutSecondPlayer[gameName] = Games[gameName];
+                   }
+                }); 
+                this.setState({                    
+                    games: gamesWithoutSecondPlayer
+                });
             });
         };
 
@@ -93,27 +117,28 @@ function App() {
                 <>
                     {
                         this.state.isMultiplayer === null
-                            ? <div>
-                                <button onClick={this.handleOnePlayerGameMode}>Одиночная игра</button>
-                                <button onClick={this.handleMultyPlayerGameMode}>Сетевая игра</button>
+                            ? <div className={"game__container"}>
+                                <button className={"btn"} onClick={this.handleOnePlayerGameMode}>Одиночная игра</button>
+                                <button className={"btn"} onClick={this.handleMultyPlayerGameMode}>Сетевая игра</button>
                             </div>
                             : null
                     }
 
                     {
                         this.state.isMultiplayer && this.state.isServer === null && this.state.isClient === null
-                            ? <div>
-                                <button onClick={this.handelServerGameMode}>Сервер</button>
-                                <button onClick={this.handelClientGameMode}>Клиент</button>
+                            ? <div className={"game__container"}>
+                                <button className={"btn"} onClick={this.handelServerGameMode}>Сервер</button>
+                                <button className={"btn"} onClick={this.handelClientGameMode}>Клиент</button>
                             </div>
                             : null
                     }
                     {
                         this.state.isServer && (!this.state.isStartGame || !this.state.isWaitSecondPlayer)
-                            ? <div>
+                            ? <div className={"game__container"}>
                                 <form id="game-name-form" onSubmit={this.handleSubmitServer} >
-                                    <label>Введите название игры
+                                    <label className={"game-name__title"}><span>Введите название игры</span>
                                         <input
+                                            className={"game-name__input"}
                                             type="text"
                                             placeholder="Ваше название игры"
                                             id="gameName" name="gameName"
@@ -121,15 +146,15 @@ function App() {
                                             onChange={this.handleGameNameInputChange}
                                             required />
                                     </label>
-                                    <button type="submit">Создать игру</button>
+                                    <button className={"btn"} type="submit">Создать игру</button>
                                 </form>
                             </div>
                             : null
                     }
                     {
                         this.state.isWaitSecondPlayer
-                            ? <div>
-                                <p>Ждем второго игрока...</p>
+                            ? <div className={"game__container"}>
+                                <p className={"game-name__message"}>Ждем второго игрока...</p>
                             </div>
                             : null
                     }
@@ -137,13 +162,14 @@ function App() {
                         this.state.isClient && !this.state.isStartGame
                             ? <Client
                                 games={this.state.games}
-                                handleSubmit={this.handleSubmitClient} />
+                                handleSubmit={this.handleSubmitClient}
+                                handleRefreshGames={this.refreshGames} />
                             : null
                     }
                     {/* Поля для одиночной игры */}
                     {
                         this.state.isStartGame && !this.state.isMultiplayer
-                            ? <section>
+                            ? <section className={"seabattle"}>
                                 <Game isMultiplayer={this.state.isMultiplayer} />
                             </section>
                             : null
@@ -151,7 +177,7 @@ function App() {
                     {/* Поля для игрока-сервера */}
                     {
                         this.state.isStartGame && this.state.isServer
-                            ? <section>
+                            ? <section className={"seabattle"}>
                                 <Game
                                     isMultiplayer={this.state.isMultiplayer}
                                     isServer={this.state.isServer}
@@ -165,7 +191,7 @@ function App() {
 
                     {
                         this.state.isStartGame && this.state.isClient
-                            ? <section>
+                            ? <section className={"seabattle"}>
                                 <Game
                                     isMultiplayer={this.state.isMultiplayer}
                                     isServer={!!this.state.isServer}
