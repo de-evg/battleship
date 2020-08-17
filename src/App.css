@@ -330,6 +330,22 @@ ul {
   }
 
 @media (min-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+
+  .main {
+    margin: 0 auto;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    overflow: visible;
+    position: static;
+    width: inherit;
+    flex-basis: auto;
+  }
+
   .game__container {
     margin: 0 auto;
     padding-top: 100px;
@@ -338,9 +354,45 @@ ul {
     justify-content: center;
   }
 
+  .game-board {    
+    position: static;
+    height: inherit;
+  }
+
+  .game-info {
+    padding-left: 135px;;
+    align-items: flex-start;
+  }
+
+  .game-info h2 {
+    margin: 0;
+    width: 660px;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .game-info .swipe {
+    display: none;
+  }
+
+  .game-info .ships-list {
+    margin-left: auto;
+    padding-right: 135px;
+
+  }
+
+  .seabattle__place-ship-text {
+    width: 660px;
+  }
+
+  .game-info .btn {
+    width: 660px;
+    margin: 0;
+  }
+
   .btn {    
     width: 400px;
-    padding: 10px 15px;    
+    padding: 10px 15px;
   }
 
   .btn:hover, .btn:hover {    
