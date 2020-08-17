@@ -1414,7 +1414,7 @@ class Game extends React.Component {
     render() {
         const messageMoveElement = this.state.game.isPlayerMove ? <p>Ваш ход</p> : <p>Ход противника</p>
         const titleElement = this.state.game.isPlayerBoard ? <h2>Ваше поле</h2> : <h2>Поле противника</h2>;
-        const shipsOnFilter = this.state.game.isPlayerBoard ? this.state.playerData.shipsData : this.state.computerData.shipsData;
+        const shipsOnFilter = this.state.game.isPlayerBoard ? this.state.computerData.shipsData : this.state.playerData.shipsData ;
         const shipsTypes = Object.keys(shipsOnFilter);
         const ships = [];
         shipsTypes.forEach((type) => {
@@ -1508,7 +1508,7 @@ class Game extends React.Component {
                                 !this.state.gameMode.isStart && !this.state.gameMode.isArrangement ? titleElement : null
                             }
                             {
-                                this.state.gameMode.isGame ? this.state.messageMoveElement : ""
+                                this.state.gameMode.isGame ? messageMoveElement : ""
                             }
                             {
                                 this.state.gameMode.isArrangement && !this.state.arrangementModeSettings.isAllShipPlaced ? messageArrangementElement.map((elemnt, i) => elemnt) : null
