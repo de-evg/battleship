@@ -14,7 +14,7 @@ class CompField extends React.Component {
     });
     const titleElement = this.props.playerType === "player" ? <h2>Ваше поле</h2> : <h2>Поле противника</h2>;
     return (
-      <div className="game-board">
+      <div className="game-board hidden-board">
         <div className="game" >
           <ul className="game__column-name">
             {
@@ -37,25 +37,7 @@ class CompField extends React.Component {
             handlePlayerMove={this.props.handlePlayerMove}
             handleMoveClick={this.props.handleMoveClick}
           />
-          </div>
-          <div className={"game-info"}>
-            {
-              titleElement
-            }
-            {
-              this.props.gameMode.isGame ? this.props.messageMoveElement : ""
-            }
-            {
-              !this.props.gameMode.isGame
-                ? null
-                : <ul className="ships-list">
-                  {ships.reverse().map((typeShips, i) => {
-                    return <li key={i}>{i + 1} палубных - <span>x{typeShips.length}</span></li>
-                  })}
-                </ul>
-            }    
-            <button className={"btn swipe"} onClick={this.props.handleBattlefieldToggle}>Переключить поле</button>      
-        </div>
+          </div>          
       </div>
     );
   }

@@ -55,6 +55,7 @@ class Game extends React.Component {
                 isOver: false
             },
             game: {
+                isPlayerBoard: true,
                 isPlayerMove: null,
                 isPlayerWin: null
             }
@@ -168,7 +169,7 @@ class Game extends React.Component {
             const currentShipOnPlace = this.state.arrangementModeSettings.currentShipOnPlace;
             currentShipOnPlace.coords = [];
             newArrangementModeSettings.currentShipOnPlace = currentShipOnPlace;
-            this.setState({ arrangementModeSettings: newArrangementModeSettings });
+            this.setState({arrangementModeSettings: newArrangementModeSettings});
 
             const columnNumber = +evtOver.target.id.slice(0, 1);
             const rowNumber = +evtOver.target.id.slice(1);
@@ -196,7 +197,7 @@ class Game extends React.Component {
             if (!isCoordsBloked) {
                 const newArrangementModeSettings = this.state.arrangementModeSettings;
                 newArrangementModeSettings.currentShipOnPlace = currentShipOnPlace;
-                this.setState({ currentShipOnPlace: currentShipOnPlace });
+                this.setState({currentShipOnPlace: currentShipOnPlace});
 
                 const previewGameFieldsData = this.state.playerData.currentGameFieldsData;
                 currentShipOnPlace.coords.forEach((coord) => {
@@ -204,7 +205,7 @@ class Game extends React.Component {
                 });
                 const newplayerData = this.state.playerData;
                 newplayerData.currentGameFieldsData = previewGameFieldsData
-                this.setState({ playerData: newplayerData });
+                this.setState({playerData: newplayerData});
             }
         }
     };
@@ -220,11 +221,11 @@ class Game extends React.Component {
                 });
                 const newplayerData = this.state.playerData;
                 newplayerData.currentGameFieldsData = nextGameFieldsData
-                this.setState({ playerData: newplayerData });
+                this.setState({playerData: newplayerData});
                 currentShipOnPlace.coords = [];
                 const newArrangementModeSettings = this.state.arrangementModeSettings;
                 newArrangementModeSettings.currentShipOnPlace = currentShipOnPlace;
-                this.setState({ arrangementModeSettings: newArrangementModeSettings });
+                this.setState({arrangementModeSettings: newArrangementModeSettings});
             }
         }
     };
@@ -303,7 +304,7 @@ class Game extends React.Component {
             const currentShipOnPlace = this.state.arrangementModeSettings.currentShipOnPlace;
             currentShipOnPlace.isVertical = !currentShipOnPlace.isVertical;
             newArrangementModeSettings.currentShipOnPlace = currentShipOnPlace;
-            this.setState({ arrangementModeSettings: newArrangementModeSettings });
+            this.setState({arrangementModeSettings: newArrangementModeSettings});
         }
     };
 
@@ -315,7 +316,7 @@ class Game extends React.Component {
             const currentShipOnPlace = this.state.arrangementModeSettings.currentShipOnPlace;
             currentShipOnPlace.isVertical = !currentShipOnPlace.isVertical;
             newArrangementModeSettings.currentShipOnPlace = currentShipOnPlace;
-            this.setState({ arrangementModeSettings: newArrangementModeSettings });
+            this.setState({arrangementModeSettings: newArrangementModeSettings});
         }
     };
 
@@ -352,7 +353,7 @@ class Game extends React.Component {
             gameMode.isArrangement = false;
             gameMode.isGame = true;
         }
-        this.setState({            
+        this.setState({
             playerData: playerData,
             computerData: newcomputerData,
             gameMode: gameMode
@@ -361,10 +362,12 @@ class Game extends React.Component {
 
     handleBattlefieldToggle(evt) {
         evt.preventDefault();
-        const currentGameBoardElement = document.querySelector(".game-board.current-board");
-        const hiddenGameBoardElement = document.querySelector(".game-board");
+        const currentGameBoardElement = document.querySelector(".current-board");
+        const hiddenGameBoardElement = document.querySelector(".hidden-board");
         currentGameBoardElement.classList.toggle("current-board");
+        currentGameBoardElement.classList.toggle("hidden-board");
         hiddenGameBoardElement.classList.toggle("current-board");
+        hiddenGameBoardElement.classList.toggle("hidden-board");
     }
     //написать условия для корректной смены класса
 
@@ -1217,7 +1220,7 @@ class Game extends React.Component {
             const onHit = () => {
                 const shipType = battlefield["column" + column][row].shipID.slice(0, 1);
                 const shipNumber = battlefield["column" + column][row].shipID.slice(-1);
-                const shipOnFire = playerData.shipsData["deck" + shipType][shipNumber];                
+                const shipOnFire = playerData.shipsData["deck" + shipType][shipNumber];
 
                 const updateShipsData = () => {
                     if (shipOnFire.hits.length) {
@@ -1380,7 +1383,7 @@ class Game extends React.Component {
             const placedComputerShipsOnField = placeComputerShips(this.state.computerData.currentGameFieldsData, this.state.computerData.shipsData);
             const newcomputerData = this.state.computerData;
             newcomputerData.currentGameFieldsData = placedComputerShipsOnField;
-            this.setState({ computerData: newcomputerData });
+            this.setState({computerData: newcomputerData});
 
         }
 
@@ -1410,6 +1413,13 @@ class Game extends React.Component {
 
     render() {
         const messageMoveElement = this.state.game.isPlayerMove ? <p>Ваш ход</p> : <p>Ход противника</p>
+        const titleElement = this.state.game.isPlayerBoard ? <h2>Ваше поле</h2> : <h2>Поле противника</h2>;
+        const shipsOnFilter = this.state.game.isPlayerBoard ? this.state.playerData.shipsData : this.state.computerData.shipsData;
+        const shipsTypes = Object.keys(shipsOnFilter);
+        const ships = [];
+        shipsTypes.forEach((type) => {
+            ships.push(shipsOnFilter[type].filter((ship) => !ship.isDestroyed));
+        });
         const playBtnElement = <button className="btn seabattle__place-ship-btn" onClick={this.handleBtnPlayClick}>
             {!this.state.playerData.isPlayerReady ? 'Играть' : 'Ждем противника'}</button>
         const messageArrangementElement = [];
@@ -1420,7 +1430,15 @@ class Game extends React.Component {
         const arrangementBtnElement = <button className="btn" onClick={this.handleBtnClick}>Разместить корабли</button>
         return (
             <div className="container">
-                <h1 className={this.state.gameMode.isGame || this.state.gameMode.isArrangement ? "visually--hidden" : ""}>Морской бой</h1>
+                {
+                    !this.state.gameMode.isArrangement && !this.state.gameMode.isGame && !this.state.arrangementModeSettings.isAllShipPlaced
+                        ? <div className="header">
+                            <h1 className={this.state.gameMode.isGame || this.state.gameMode.isArrangement ? "visually--hidden" : ""}>Морской бой</h1>
+                            {arrangementBtnElement}
+                        </div>
+                        : null
+                }
+
                 {
                     this.props.isMultiplayer
                         ? <div className={'main'}>
@@ -1484,16 +1502,39 @@ class Game extends React.Component {
                             </div>
                 }
                 {
-                    this.state.arrangementModeSettings.isAllShipPlaced && this.state.gameMode.isArrangement ? playBtnElement : null
+                    this.state.gameMode.isGame || this.state.gameMode.isOver ||  this.state.gameMode.isArrangement
+                        ? <div className={"game-info"}>
+                            {
+                                !this.state.gameMode.isStart && !this.state.gameMode.isArrangement ? titleElement : null
+                            }
+                            {
+                                this.state.gameMode.isGame ? this.state.messageMoveElement : ""
+                            }
+                            {
+                                this.state.gameMode.isArrangement && !this.state.arrangementModeSettings.isAllShipPlaced ? messageArrangementElement.map((elemnt, i) => elemnt) : null
+                            }
+                            {
+                                this.state.arrangementModeSettings.isAllShipPlaced && this.state.gameMode.isArrangement ? playBtnElement : null
+                            }
+                            {
+                                !this.state.gameMode.isGame
+                                    ? null
+                                    : <ul className="ships-list">
+                                        {ships.reverse().map((typeShips, i) => {
+                                            return <li key={i}>{i + 1} палубных - <span>x{typeShips.length}</span></li>
+                                        })}
+                                    </ul>
+                            }
+                            {
+                                !this.state.gameMode.isStart && !this.state.gameMode.isArrangement
+                                    ? <button className={"btn swipe"} onClick={this.handleBattlefieldToggle}>Переключить поле</button>
+                                    : null
+                            }
+                        </div>
+                        : null
                 }
 
-                {
-                    this.state.gameMode.isArrangement && !this.state.arrangementModeSettings.isAllShipPlaced ? messageArrangementElement.map((elemnt, i) => elemnt) : null
-                }
-                {
-                    !this.state.gameMode.isArrangement && !this.state.gameMode.isGame &&
-                        !this.state.arrangementModeSettings.isAllShipPlaced ? arrangementBtnElement : null
-                }
+
                 {
                     this.state.gameMode.isOver
                         ? <WinnerMessage
