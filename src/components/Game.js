@@ -423,7 +423,9 @@ class Game extends React.Component {
 
             const shot = (aimIndex) => {
                 if (this.state.gameMode.isGame) {
-                    console.log(this.state.computerData.shipsData);
+                    if (aimIndex === -1) {
+                        debugger;
+                    }                    
                     const aimList = this.state.playerData.aimList;
                     const gameStatus = this.state.game;
                     const playerData = this.state.playerData;
@@ -727,7 +729,7 @@ class Game extends React.Component {
                                             }
                                         }
 
-                                        checkedCoordIndex = checkCoords(column + (+rowDown - 1).toString());
+                                        checkedCoordIndex = checkCoords(column + +(+rowDown - 1).toString());
                                         if (checkedCoordIndex !== -1) {
                                             if (i > 0 && playerData.intendedAims.verticalDown.length > 0) {
                                                 playerData.intendedAims.verticalDown.push(aimList[checkedCoordIndex]);
@@ -737,13 +739,13 @@ class Game extends React.Component {
                                             }
                                         }
 
-                                        if (columnUp > 0) {
+                                        if (columnUp < 9) {
                                             columnUp = +columnUp + 1;
                                         }
                                         if (columnDown > 0) {
                                             columnDown = +columnDown - 1;
                                         }
-                                        if (rowUp > 0) {
+                                        if (rowUp < 9) {
                                             rowUp = +rowUp + 1;
                                         }
                                     }
@@ -782,7 +784,7 @@ class Game extends React.Component {
                                             }
                                         }
 
-                                        if (columnUp > 0) {
+                                        if (columnUp < 9) {
                                             columnUp = +columnUp + 1;
                                         }
                                         if (columnDown > 0) {
@@ -826,10 +828,10 @@ class Game extends React.Component {
                                             }
                                         }
 
-                                        if (columnUp > 0) {
+                                        if (columnUp < 9) {
                                             columnUp = +columnUp + 1;
                                         }
-                                        if (rowUp > 0) {
+                                        if (rowUp < 9) {
                                             rowUp = +rowUp + 1;
                                         }
                                         if (rowDown > 0) {
@@ -873,7 +875,7 @@ class Game extends React.Component {
                                         if (columnDown > 0) {
                                             columnDown = +columnDown - 1;
                                         }
-                                        if (rowUp > 0) {
+                                        if (rowUp < 9) {
                                             rowUp = +rowUp + 1;
                                         }
                                         if (rowDown > 0) {
@@ -924,13 +926,13 @@ class Game extends React.Component {
                                             }
                                         }
 
-                                        if (columnUp > 0) {
+                                        if (columnUp < 9) {
                                             columnUp = +columnUp + 1;
                                         }
                                         if (columnDown > 0) {
                                             columnDown = +columnDown - 1;
                                         }
-                                        if (rowUp > 0) {
+                                        if (rowUp < 9) {
                                             rowUp = +rowUp + 1;
                                         }
                                         if (rowDown > 0) {
@@ -1031,12 +1033,15 @@ class Game extends React.Component {
                 let direction = generateDirection();
 
                 if (!playerData.intendedAims[direction].length) {
-                    changeDirection(playerData);
-                    direction = generateDirection();
-                    if (!playerData.intendedAims[direction].length) {
+                    if (!playerData.isDirectionChanged) {
+                        changeDirection(playerData);
+                        direction = generateDirection();
+                    }                    
+                    if (playerData.isDirectionChanged && !playerData.isOrietationChanged) {
                         changeOrientation(playerData);
                         direction = generateDirection();
-                    } if (!playerData.intendedAims[direction].length) {
+                    }
+                    if (playerData.isOrietationChanged) {
                         changeDirection(playerData);
                         direction = generateDirection();
                     }
@@ -1045,6 +1050,9 @@ class Game extends React.Component {
                 const intendedAimCoords = playerData.intendedAims[direction];
                 let intendedCoord = intendedAimCoords.splice(0, 1)[0];
                 const aimIndex = aimList.findIndex((aim) => intendedCoord === aim);
+                if (aimIndex === -1) {
+                    debugger;
+                }
                 shot(aimIndex);
             };
 
