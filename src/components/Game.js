@@ -1,12 +1,12 @@
 import React from 'react';
-import UserField from './UserField.js';
-import CompField from './CompField.js';
+import UserField from './User-field.js';
+import CompField from './Comp-field.js';
 import generateShipList from '../data/ships.js';
 import generateBasicGameFieldData from '../data/field.js';
-import aimList from '../data/moveComputerData.js';
-import compShipList from '../data/randomShips.js';
+import aimList from '../data/comp-move.js';
+import compShipList from '../data/random-ships.js';
 import utils from '../data/utils.js';
-import WinnerMessage from './WinnerMessage.js';
+import WinnerMessage from './Winner-message.js';
 
 class Game extends React.Component {
     constructor(props) {
@@ -68,7 +68,7 @@ class Game extends React.Component {
             state.gameName = this.props.gameName;
             state.isPlayerMove = null;
             if (this.state.gameMode.isArrangement) {
-                if (this.props.isServer) {
+                if (this.props.isHost) {
                     state.currentGameFieldsData = this.state.playerData.currentGameFieldsData;
                     state.shipsData = this.state.playerData.shipsData;
                 }
@@ -78,7 +78,7 @@ class Game extends React.Component {
                 }
             }
             if (this.state.gameMode.isGame) {
-                if (this.props.isServer) {
+                if (this.props.isHost) {
                     state.nickname = 'serverPlayer';
                     state.currentGameFieldsData = this.state.playerData.currentGameFieldsData;
                     state.shipsData = this.state.playerData.shipsData;
@@ -111,7 +111,7 @@ class Game extends React.Component {
                     const playerData = this.state.playerData;
                     const game = this.state.game;
                     console.log(data);
-                    if (this.props.isServer) {
+                    if (this.props.isHost) {
                         newOpponentData = data.clientPlayer;
                         playerData.currentGameFieldsData = data.serverPlayer.currentGameFieldsData;
                         playerData.shipsData = data.serverPlayer.shipsData;
@@ -327,7 +327,7 @@ class Game extends React.Component {
         const newcomputerData = this.state.computerData;
         if (this.props.isMultiplayer && this.state.playerData.isPlayerReady && this.state.gameMode.isArrangement) {
             const state = {};
-            state.nickname = this.props.isServer ? 'serverPlayer' : 'clientPlayer';
+            state.nickname = this.props.isHost ? 'serverPlayer' : 'clientPlayer';
             state.gameName = this.props.gameName;
             state.isPlayerReady = playerData.isPlayerReady;
             state.isPlayerMove = this.state.game.isPlayerMove;
@@ -388,6 +388,7 @@ class Game extends React.Component {
         const isSecondPlayerAllShipsDestroyed = this.checkOnDestroyedShips(secondPlayerShips);
         gameMode.isOver = isFirstPlayerAllShipsDestroyed || isSecondPlayerAllShipsDestroyed ? true : false;
         if (gameMode.isOver) {
+            this.props.socket.emit('deleteGame', this.state.gameName);
             gameMode.isGame = false;
             game.isPlayerWin = isSecondPlayerAllShipsDestroyed ? true : false;
             this.setState({
@@ -403,10 +404,6 @@ class Game extends React.Component {
 
             const generateRandomAimIndex = () => {
                 const aimIndex = utils.randomNumber(0, aimList.length);
-                if (aimIndex === -1) {
-                    console.log('строка 258');
-                    debugger;
-                }
                 return aimIndex;
             };
             const computerData = this.state.computerData;
@@ -1077,11 +1074,11 @@ class Game extends React.Component {
 
     handlePlayerMove = (evt) => {
         if (evt.target.tagName === 'LI' && this.state.gameMode.isGame && (this.state.game.isPlayerMove ||
-            (this.state.isPlayerMove && this.props.isServer) || (this.state.isPlayerMove && this.props.isClient))
+            (this.state.isPlayerMove && this.props.isHost) || (this.state.isPlayerMove && this.props.isClient))
         ) {
             const newOpponentData = this.props.isMultiplayer ? this.state.opponentData : this.state.computerData;
             const gameStatus = this.state.game;
-            if (this.state.gameMode.isGame && (this.state.game.isPlayerMove || (this.state.isPlayerMove && this.props.isServer) ||
+            if (this.state.gameMode.isGame && (this.state.game.isPlayerMove || (this.state.isPlayerMove && this.props.isHost) ||
                 (this.state.isPlayerMove && this.props.isClient)) &&
                 (!newOpponentData.currentGameFieldsData['column' + evt.target.id.slice(0, 1)][evt.target.id.slice(-1)].isHit &&
                     !newOpponentData.currentGameFieldsData['column' + evt.target.id.slice(0, 1)][evt.target.id.slice(-1)].isMiss)) {
@@ -1182,7 +1179,7 @@ class Game extends React.Component {
                             const state = {
                             };
                             state.gameName = this.props.gameName;
-                            if (this.props.isServer) {
+                            if (this.props.isHost) {
                                 state.nickname = 'serverPlayer';
                                 state.squireID = target.id;
                             }
@@ -1309,15 +1306,13 @@ class Game extends React.Component {
         }
     };
 
-    componentWillUpdate() {
+    componentDidUpdate() {
         if (!this.props.isMultiplayer && this.state.gameMode.isGame && !this.state.game.isPlayerMove) {
             setTimeout(() => {
                 this.computerMove();
             }, 700);
         }
-    };
 
-    componentDidUpdate() {
         if (this.props.isMultiplayer && this.state.playerData.isPlayerReady && this.state.gameMode.isArrangement) {
             const makeRequest = () => {
                 this.props.socket.emit('getGame', this.props.gameName);
@@ -1331,13 +1326,13 @@ class Game extends React.Component {
                         let newOpponentData;
                         const playerData = this.state.playerData;
                         const game = this.state.game;
-                        if (this.props.isServer) {
+                        if (this.props.isHost) {
                             if (gameState.serverPlayer.isPlayerMove) {
                                 playerData.currentGameFieldsData = gameState.serverPlayer.currentGameFieldsData;
                                 playerData.shipsData = gameState.serverPlayer.shipsData;
                                 console.log(gameState, 'на сервере');
                             }
-                            game.isPlayerMove = gameState.isServerPlayerMove;
+                            game.isPlayerMove = gameState.isHostPlayerMove;
                             newOpponentData = gameState.clientPlayer;
                         }
                         if (this.props.isClient) {
@@ -1347,7 +1342,7 @@ class Game extends React.Component {
                                 playerData.shipsData = gameState.clientPlayer.shipsData;
                                 console.log(gameState, 'на клиенте');
                             }
-                            game.isPlayerMove = !gameState.isServerPlayerMove;
+                            game.isPlayerMove = !gameState.isHostPlayerMove;
                             newOpponentData = gameState.serverPlayer;
                         }
                         this.setState({
@@ -1369,8 +1364,7 @@ class Game extends React.Component {
                 this.shotOpponent(shots);
             }
         }
-        if (this.props.isMultiplayer && this.state.gameMode.isGame && this.state.game.isPlayerMove) {
-            debugger;
+        if (this.props.isMultiplayer && this.state.gameMode.isGame && this.state.game.isPlayerMove) {            
             this.gameOver(this.state.playerData.shipsData, this.state.opponentData.shipsData);
         }
     }
@@ -1406,7 +1400,7 @@ class Game extends React.Component {
             }
             sendStartStateOnServer();
             this.props.socket.emit('getShotData', this.props.gameName);
-            const playerName = this.props.isServer ? 'serverPlayer' : 'clientPlayer';
+            const playerName = this.props.isHost ? 'serverPlayer' : 'clientPlayer';
             let shotsData;
             this.props.socket.on('sendShot', (gameShotData) => {
                 shotsData = gameShotData;
@@ -1441,7 +1435,7 @@ class Game extends React.Component {
                 {
                     !this.state.gameMode.isArrangement && !this.state.gameMode.isGame && !this.state.arrangementModeSettings.isAllShipPlaced
                         ? <div className="header">
-                            <h1 className={this.state.gameMode.isGame || this.state.gameMode.isArrangement ? "visually--hidden" : ""}>Морской бой</h1>
+                            <h1 className={this.state.gameMode.isStart || this.state.gameMode.isGame || this.state.gameMode.isArrangement ? "visually--hidden" : ""}>Морской бой</h1>
                             {arrangementBtnElement}
                         </div>
                         : null

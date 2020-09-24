@@ -20,11 +20,10 @@ ul {
 
 .game__container {
   margin: 0 auto;
-  padding-top: 25%;
+  padding-top: 100px;
   width: 400px;    
   display: flex;
-  justify-content: center;
-  
+  justify-content: center;  
 }
 
 .header {
@@ -55,6 +54,35 @@ ul {
 
   display: flex;
   flex-direction: row;
+}
+
+.game__container form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.game-name__title {
+  margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+
+.game-name__title span {
+  margin-bottom: 15px;
+  padding: 0 5px;
+}
+
+.game-name__title input {  
+  padding: 5px;
+  width: 225px;
+
+  border-radius: 5px;
 }
 
 .game-board {

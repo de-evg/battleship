@@ -1,6 +1,6 @@
 import React from 'react';
 
-class Client extends React.Component {
+class GameConnecting extends React.Component {
     render() {
         const games = Object.keys(this.props.games);
         return (
@@ -16,8 +16,9 @@ class Client extends React.Component {
                                         <input id={"game" + i} className={"board-form__game-radio"}
                                             type="radio" name="gameName"
                                             value={gameName}
-                                            required />
-                                        <label for={"game" + i} className={"board-form__game-title"} key={"label" + i}>{gameName}</label>
+                                            required
+                                            key={"input" + i} />
+                                        <label htmlFor={"game" + i} className={"board-form__game-title"} key={"label" + i}>{gameName}</label>
 
                                     </>
                                 )
@@ -38,4 +39,4 @@ class Client extends React.Component {
     }
 }
 
-export default Client;
+export default GameConnecting;

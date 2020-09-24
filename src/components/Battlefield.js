@@ -1,5 +1,5 @@
 import React from 'react';
-import BattlefieldRow from './BattlefieldRow.js';
+import BattlefieldRow from './Battlefield-row.js';
 
 class Battlefield extends React.Component {
   componentDidMount() {
